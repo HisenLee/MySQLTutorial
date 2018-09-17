@@ -1,0 +1,359 @@
+﻿1.mysql数据类型
+a.整型 
+	tinyint(1个字节) 最大到2的8次方
+	smallint(2个字节) 最大到2的16次方
+	mediumint(3个字节)
+	int(4个字节)
+	bigint(8个字节)
+b.浮点型
+	float(单精度，8个精度，4个字节)
+	double(双精度，16个精度，8个字节)
+c.定点型
+	decimal(浮点数在数据库中存的是近似值，定点类型存放的精确值)
+d.字符串
+	char(固定长度，最多255个字符)
+	varchar(可变长度，最多65535(2的16次方-1)个字符)
+	tinytext(可变长度，最多255个字符)
+	text(可变长度，最多65535个字符)
+	mediumtext(可变长度，最多2的24次方-1个字符)
+	longtext(可变长度，最多2的32次方-1个字符)
+	set(集合字符串)
+e.二进制数据
+	_Blob
+f.日期时间类型
+	date('2018-12-04')
+	time('12:35:50')
+	datetime('2018-12-04 12:35:50')
+	timestamp(自动存储记录最新的修改时间)
+	year('2018')
+g.枚举类型
+	enum('1', '2', '3');
+	
+2.mysql语句以分号结束,  注释符号/* */ 或者 -- 
+
+3.查询数据库
+	show databases;
+	show databases like 'sys%'; (模糊查询%匹配多个字符  _匹配单个字符
+3.新增数据库
+	create database schoolsys charset utf8;
+4.更新数据库
+	alter database schoolsys charset gbk;	
+5.删除数据库
+	drop database schoolsys;
+	
+6.创建表
+	use schoolsys; 
+	create table if not exists student(
+		id int primary key,
+		name varchar(20), 
+		age int, 
+		grade varchar(10)
+		f1 float(10, 2) --10表示总长度， 2表示小数位数
+		d1 decimal(10, 2) --定点型
+		gender enum('男', '女', '保密') --枚举类型
+		hobby set('音乐', '旅行', '运动') --set集合类型
+		-- 增加外键
+		foreign key(c_id) references class(id)  
+		)charset utf8;
+7.查询表
+	show tables/ show tables like 'table_'
+	查看表的创建语句
+	show create table student;	
+8.查询表的字段
+	show columns from tablename	
+	desc tablename
+9.修改表
+	a.修改名称 rename table oldname to newname;
+	b.新增字段 alter table student add column id int first;
+	c.修改字段 alter table student modify name char(10) after id;
+	d.重命名字段 alter table student change grade newgrade varchar(10);
+	e.删除字段 alter table student drop age;
+10.删除表
+	drop table table1, table2, table3...; 可以删除多个表
+	
+11.新增数据
+	insert into student values('allen', 20, '88');
+	insert into student(age, name) values(18, 'peter');
+12.查询数据(order by 排序，asc升序，desc降序)
+	-- 普通查询
+	select * from student;
+	-- 限制起始值
+	select * from student limit 0,4;
+	-- 排序
+	select name, age from student where age = '18' order by age asc/desc;
+	-- 去重复操作
+	select distinct * from student; 
+	-- 使用别名
+	select id, name as 姓名, age as 年龄 from student;
+	-- 子查询
+	select * from (select *from studnet) as stu;
+	-- 条件筛选查询
+    比较运算符：>、<、>=、<=、<>、=、like、between and、in和not in；
+    逻辑运算符：&&、||、和!.
+	select * from student where id = 2 || id = 3 || id = 5;
+	select * from student where id in (2,3,5); 
+	-- 分组查询
+	select * from student group by gender, grade;
+	-- 统计函数
+	select sex,count(*),max(age),min(age),avg(age),sum(age) from student group by sex;
+	-- 对统计出来的结果进行筛选或者起别名需要用到having子句，不能用where子句
+	-- 求出表 student 中所有班级人数大于等于 2 的班级
+	select grade,count(*) from student group by grade having count(*) >= 2;
+	-- 起别名total(此时如果用where子句会报错)
+	select grade,count(*) as total from student group by grade having total >= 2;
+	--交叉连接与多表查询结果相同，都是笛卡尔积
+	select * from student cross join class;
+	= select * from student, class;
+	-- 内连接(join...on 条件)
+	select * from student inner join class on student.grade = class.grade;
+	-- 外连接(取出主表的每一条记录，与另一个表的所有记录做连接)
+	-- 将表 student 与 class 进行左连接
+	select s.*,c.id as c_id,c.grade as c_grade,room from student as s 
+		left join class as c 
+		on s.grade = c.grade;
+	将表 student 与 class 进行右连接
+	select s.*,c.id as c_id,c.grade as c_grade,room from student as s 
+		right join class as c 
+		on s.grade = c.grade;
+	-- 联合查询(将多次查询的结果拼接到一起) union all/distinct
+	select * from class union distinct select * from class; --去重复操作
+	select * from class union all select * from class; --保留所有记录
+	-- 按照年龄排序，男生按升序，女生按降序
+	(select * from student where gender = "boy" order by age asc limit 666)
+	 union
+	(select * from student where gender = "girl" order by age desc limit 666);
+	-- 子查询(select 嵌套select, 可以加in/exists等各种条件关键字)
+	select * from student where c_id = (select id from class where grade = "PM3.1");
+	select * from student where exists(select * from class where id = 3);
+	
+13.更新数据[部分操作可以用limit关键字]
+	update student set age = 20 where name = 'peter' limit 3;	
+14.删除数据[部分操作可以用limit关键字]
+	delete from student where age < 18 limit 10
+	
+15.-- 服务器与客户端的编码必须一致，否则可能会出现乱码，尤其是传递中文字段的时候 
+	查看服务器识别的全部字符集	show character set; 
+	查询服务器对外的默认字符集	show variables like 'character_set%'；
+	修改服务器默认接收的字符集	set character_set_client = gbk;
+	
+16.校对集
+	_bin:binary二进制比较，区分大小写
+	_cs:case sensitive 大小写敏感，区分大小写
+	_ci:case insensitive 大小写不敏感，不区分大小写
+17.查看校对集 show collation;
+18.使用校对集
+create table student(
+	name varchar(100)
+)charset utf8 collate utf8_bin; --二进制校对
+ charset utf8 collate utf8_general_ci; --不区分大小写
+ 
+ 19.列的属性
+ null、not null、default、primary key、unique key、auto_increment和comment等
+ 
+ 20.主键可以设置多个
+ create table my_pri2(
+    number char(10) not null comment '学号',
+    course char(10) not null comment '课程编号',
+    score tinyint unsigned default 60,
+    -- 增加主键限制，学号和课程编号应该是对应的，具有唯一性
+    primary key(number,course)
+)charset utf8;
+21.创建表之后追加主键约束
+	alter table student add primary key(course); -- 推荐使用
+22.删除主键 alter table student drop primary key;
+
+23.设置自增字段的步长
+	set auto_increment_increment = 5
+	设置自增字段的初始值
+	set auto_increment_offset = 1
+
+24.增加唯一键(唯一键与主键本质相同，区别在于：唯一键允许字段值为空，并且允许多个空值存在。)
+	alter table my_unique3 add unique key(number);	
+25.删除唯一键
+	alter table my_unique3 drop index col_name; 
+	
+26.-- 当主键冲突的时候，进行替换操作
+	replace into my_class values ('PM3528','B215');
+	
+27.根据已有表复制表结构
+	create table newtable like oldtable;	
+28.复制数据并插入新表
+	insert into newtable select * from oldtable;
+29.蠕虫复制，从A表复制数据再插入A表，执行多次可以产生多条数据，对表格进行压力测试
+	insert into A select * from A;
+	insert into A select * from A; ...
+
+30.truncate语句
+	truncate student; --先清空删除student表，再重新创建student表
+
+31.创建外键
+create table my_foreign1(
+    id int primary key auto_increment,
+    name varchar(20) not null comment '学生姓名',
+    c_id int comment '班级表ID',
+    -- 增加外键
+    foreign key(c_id) references class(id)  
+)charset utf8;
+32.创建表格之后增加外键
+	alter table mytable2 add constraint test_foreign(外键名) foreign key(c_id) references mytable1(id);
+33.外键不能修改，只能先删除再增加
+	alter table my_foreign1 drop foreign key my_foreign1_ibfk_1(外键名) ;
+34.外键的约束模式
+    district：严格模式（默认），父表不能删除或更新一个已经被子表数据引用的记录；
+    cascade：级联模式，父表的操作，对应子表关联的数据也跟着被删除；
+    set null：置空模式，父表的操作之后，子表对应的数据（外键字段）被置空。
+create table my_foreign3(
+    id int primary key auto_increment,
+    name varchar(20) not null,
+    c_id int,
+    -- 增加外键 -- 指定删除模式 -- 指定更新模式
+    foreign key(c_id) references class(id) on delete set null on update cascade
+)charset utf8;
+
+35.视图View的意义
+视图可以节省 SQL 语句，将一条复杂的查询语句用视图来进行封装，以后可以直接对视图进行操作；
+数据安全，视图操作主要是针对查询的，如果对视图结构进行处理，例如删除，并不会影响基表的数据；
+36.view，是一种有结构（有行有列），但没有结果（结构中不真实存放数据）的虚拟表，
+虚拟表的结构来源不是自己定义的，而是从对应的基表（视图的数据来源）中产生的。
+37.创建视图(把复杂的查询语句简化为一个视图，以后直接操作视图名称即可)
+	create view my_v3 as
+	select * from student as s left join class c on s.c_id = c.id;
+38.因为视图可以理解为虚拟表，所以对表的语句操作也可以用来操作视图
+
+39.-- 单表数据备份
+	select * from class into outfile 'D:/CoderLife/testMySQL/class.txt';
+	-- 还原单表数据
+	delete from class; --清空数据
+	load data infile 'D:/a.txt' into table class;
+	select * from class;
+	
+40.事务：一系列将要发生或正在发生的连续操作，要么全部执行，要么全不执行
+41.开启事务之后，在提交之前的操作，并不会修改实际的数据表，只是把操作记录在了事务日志中，提交之后才会修改真实数据。
+42.事务使用
+start transaction; --开启事务
+update bank_account set money = money - 1000 where id = 1;
+update bank_account set money = money + 1000 where id = 2;
+commit; --提交事务
+43.rollback; --回滚事务，
+当我们提交事务之后，在进行回滚事务是不起作用的，因为事务日志在提交事务的同时已经被清除啦！
+44.rollback必须在提交之前才有用。
+45.设置回滚点
+savepoint p1; rollback to p1;回滚到p1
+46.事务的特性：
+原子性Atomic; 一致性Consistency; 隔离性Isolation; 持久性Durability
+
+47.查看系统变量的值
+	select @@autocommit,@@version,@@version_compile_os,@@wait_timeout;
+48.自定义变量；查看变量
+	set @name = 'aaa'; select @name;
+49.从数据表中获取数据，然后直接为自定义变量赋值:=
+	select @name := name from student;
+	select name from student into @name;
+	
+50.触发器trigger，
+是指事先为某张表绑定一段代码，当表中的某些内容发生改变（增、删、改）的时候，系统会自动触发代码并执行。
+51.触发器的三个要素
+    事件类型：增删改，即insert、delete和update；
+    触发时间：事件类型前和后，即before和after；
+    触发对象：表中的每一条记录（行），即整张表。
+52.每张表只能拥有一种触发时间的一种事件类型的触发器，即每张表最多可以拥有 6 种触发器。
+53.查询所有触发器
+	show triggers;
+54.所有的触发器都会被系统保持到information_schema.triggers这张表中
+	select * from information_schema.triggers;
+55.创建触发器
+create trigger + 触发器名称 + 触发器时间 + 事件类型 on 表名 for each row
+begin -- 代表触发器内容开始
+-- 触发器内容主体，每行用分号结尾
+end -- 代表触发器内容结束
+
+eg.
+-- 在mytable1中创建insert类型的触发器mytrigger1
+create trigger mytrigger1 after insert on mytable1 for each row 
+begin -- 触发器内容开始
+	-- 触发器内容主体，每行用分号结尾
+	update mytable2 set price = price - 1 where id = 1;   --每次往mytable1中insert数据时触发修改mytable2中的数据
+end -- 触发器内容结束
+56.触发器不能修改，只能删除drop trigger tri1;
+57.触发器记录
+无论触发器是否触发，只要当某种操作准备执行，系统就会将当前操作的记录的当前状态和即将执行之后的状态分别记录下来，
+供触发器使用。其中，当前状态被保存到old中，操作之后的状态被保存到new中。
+old表示当前记录的状态，new表示操作之后的状态。
+我们可以直接通过old/new来操作字段 new.name/new.id/old.name...
+
+58.创建函数
+create function show() returns int 
+begin 
+	return 222;
+end	
+select show();	-- 调用函数用select
+59.查看函数
+show function status like 'show*';
+60.查看函数从创建语句
+show create function + functionName;
+61.函数不能修改，只能删除
+drop function functionName;
+62.定义函数加循环结构求和
+create function getSum(num int) returns int
+begin
+	set @i = 1; set @sum = 0; --自定义全局变量
+	while @i <= num do
+		set @sum = @sum + @i;
+		set @i = @i + 1;
+	end while;
+	return @sum;
+end
+select getSum(100); -- 调用函数求和
+select @sum, @i; --查询自定义变量的值
+
+63.全局变量与局部变量
+set @i = 1; --全局变量
+declare i int default 1; --局部变量
+
+64.if条件语句
+if 条件判断 then
+    -- 满足条件时，要执行的代码
+else -- 可以没有 else 语句
+    -- 不满足条件时，要执行的代码
+end if;
+
+65.存储过程(可以理解为没有返回值的函数)
+存储过程是数据库中，一组为了完成特定功能的SQL语句集，存储在数据库中，经过第一次编译后，再次调用不需要再编译。
+66.创建存储过程
+create produce 过程名([参数列表])
+begin 
+	-- 过程体
+end
+67.查看过程
+show procedure status like 'pro*';
+68.调用存储过程
+call + procedureName;
+69.存储过程参数
+in:从外部传入提供给过程内部使用，可以是数值或者变量。
+out:只接收变量；且变量的数据需要先清空(置为NULL)后才能进入过程使用；过程结束后可以把变量的值传递出去使用
+inout：只接收变量；可以内部使用完变量之后，过程结束时再把值传递出去
+68.eg.
+-- 设置全局变量
+set @var1 = 1; set @var2 = 2; set @var3 = 3; 
+-- 创建过程
+create procedure mypro(in var1 int, out var2 int, inout var3 int)
+begin 
+	select var1, var2, var3; --查看传入变量的值
+	--修改局部变量
+	set var1 = 10; set var2 = 20; set var3 = 30;
+	--查看局部变量
+	select var1, var2, var3;
+	--查看全局变量
+	select @var1, @var2, @var3;
+	--修改全局变量
+	set @var1 = 'a'; set @var2 = 'b'; set @var3 = 'c';
+	--查看全局变量
+	select @var1, @var2, @var3;
+end 
+--调用过程
+call mypro(@var1, @var2, @var3);
+--过程调用结束后，再查看全局变量
+select @var1, @var2, @var3;
+
+70.在存储过程没有结束的时候，对传入变量的修改并不会影响到对应的全局变量；只有在存储过程结束后，
+才会将对应的变量值赋值给out和inout类型的变量，而in类型的变量不受影响
