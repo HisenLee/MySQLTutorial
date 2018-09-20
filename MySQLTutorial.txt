@@ -130,6 +130,7 @@ g.枚举类型
 	update student set age = 20 where name = 'peter' limit 3;	
 14.删除数据[部分操作可以用limit关键字]
 	delete from student where age < 18 limit 10
+	truncate + tableName可以清空表中所有数据
 	
 15.-- 服务器与客户端的编码必须一致，否则可能会出现乱码，尤其是传递中文字段的时候 
 	查看服务器识别的全部字符集	show character set; 
